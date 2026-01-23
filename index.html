@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Airgead Banking Web Calculator</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Airgead Banking Calculator</h1>
+    </header>
+
+    <section class="card">
+      <h2>Data Input</h2>
+
+      <form id="calcForm" autocomplete="off">
+        <div class="grid">
+          <label>
+            Initial Investment Amount ($)
+            <input id="initial" type="number" step="0.01" min="0" value="1000" required />
+          </label>
+
+          <label>
+            Monthly Deposit ($)
+            <input id="monthly" type="number" step="0.01" min="0" value="100" required />
+          </label>
+
+          <label>
+            Annual Interest Rate (%)
+            <input id="rate" type="number" step="0.01" min="0" value="5" required />
+          </label>
+
+          <label>
+            Number of Years
+            <input id="years" type="number" step="1" min="1" value="5" required />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="calcBtn">Calculate</button>
+          <button type="button" id="resetBtn">Reset</button>
+        </div>
+
+        <p id="error" class="error" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Balance and Interest Without Additional Monthly Deposits</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Year-End Balance</th>
+            <th>Year-End Interest</th>
+          </tr>
+        </thead>
+        <tbody id="noDepBody"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Balance and Interest With Monthly Deposits</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Year-End Balance</th>
+            <th>Year-End Interest</th>
+          </tr>
+        </thead>
+        <tbody id="depBody"></tbody>
+      </table>
+    </section>
+
+    <footer class="footer">
+      <p>Note: This is a browser-based version of the CS-210 console calculator that ports the original monthly calculation logic into JavaScript.</p>
+    </footer>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
