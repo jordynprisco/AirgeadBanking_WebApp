@@ -13,7 +13,10 @@
     </header>
 
     <section class="card">
-      <h2>Data Input</h2>
+      <div class="cardHeader">
+        <h2>Data Input</h2>
+        <button type="button" id="resetBtn">Reset</button>
+      </div>
 
       <form id="calcForm" autocomplete="off">
         <div class="grid">
@@ -40,7 +43,7 @@
 
         <div class="actions">
           <button type="submit" id="calcBtn">Calculate</button>
-          <button type="button" id="resetBtn">Reset</button>
+          <button type="button" id="saveScenarioBtn">Save Scenario</button>
         </div>
 
         <p id="error" class="error" aria-live="polite"></p>
@@ -73,6 +76,17 @@
         </thead>
         <tbody id="depBody"></tbody>
       </table>
+    </section>
+
+    <section class="card">
+      <h2>Saved Investment Scenarios</h2>
+
+      <div class="actions">
+        <button type="button" id="sortDateBtn">Sort by Date</button>
+        <button type="button" id="sortAmountBtn">Sort by Highest Initial</button>
+      </div>
+
+      <ul id="savedList"></ul>
     </section>
 
     <footer class="footer">
