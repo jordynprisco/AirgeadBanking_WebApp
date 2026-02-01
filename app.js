@@ -25,6 +25,11 @@
  * @param {boolean} withDeposit
  * @returns {YearSummary[]}
  */
+
+// DSA enhancement: in-memory collection of saved scenarios
+let investments = [];
+let nextId = 1;
+
 function calculateSchedule(initialInvestment, monthlyDeposit, annualInterestRate, years, withDeposit) {
   const results = [];
 
@@ -61,6 +66,66 @@ function calculateSchedule(initialInvestment, monthlyDeposit, annualInterestRate
   }
 
   return results;
+}
+
+function getParsedInputs() {
+  const initial = Number(document.getElementById("initial").value);
+  const monthly = Number(document.getElementById("monthly").value);
+  const rate = Number(document.getElementById("rate").value);
+  const years = Number(document.getElementById("years").value);
+
+  return { initial, monthly, rate, years };
+}
+
+function isValidInputs(inputs) {
+  if (!Number.isFinite(inputs.initial) || inputs.initial < 0) return false;
+  if (!Number.isFinite(inputs.monthly) || inputs.monthly < 0) return false;
+  if (!Number.isFinite(inputs.rate) || inputs.rate < 0) return false;
+  if (!Number.isFinite(inputs.years) || inputs.years <= 0) return false;
+  return true;
+}
+
+function saveInvestment(inputs) {
+  investments.push({
+    id: nextId++,
+    initial: inputs.initial,
+    monthly: inputs.monthly,
+    rate: inputs.rate,
+    years: inputs.years,
+    createdAt: new Date().toISOString()
+  });
+}
+
+function sortByDateDesc() {
+  investments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function sortByInitialDesc() {
+  investments.sort((a, b) => b.initial - a.initial);
+}
+
+function renderInvestmentList() {
+  const list = document.getElementById("savedList");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (investments.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No scenarios saved yet.";
+    list.appendChild(li);
+    return;
+  }
+
+  investments.forEach(inv => {
+    const li = document.createElement("li");
+    const date = new Date(inv.createdAt).toLocaleString();
+
+    li.textContent =
+      `Initial: $${inv.initial} | Monthly: $${inv.monthly} | Rate: ${inv.rate}% | Years: ${inv.years} | Saved: ${date} | ID number: ${inv.id}`;
+
+    list.appendChild(li);
+  });
 }
 
 // ---------- UI helpers ----------
@@ -179,6 +244,30 @@ document.addEventListener("DOMContentLoaded", () => {
     clearTableBody(depBody);
   });
 
+  document.getElementById("saveScenarioBtn")?.addEventListener("click", () => {
+    const parsed = getParsedInputs();
+
+    if (!isValidInputs(parsed)) {
+      alert("Please enter valid values before saving.");
+      return;
+    }
+
+    saveInvestment(parsed);
+    sortByDateDesc(); // newest first by default
+    renderInvestmentList();
+  });
+
+  document.getElementById("sortDateBtn")?.addEventListener("click", () => {
+    sortByDateDesc();
+    renderInvestmentList();
+  });
+
+  document.getElementById("sortAmountBtn")?.addEventListener("click", () => {
+    sortByInitialDesc();
+    renderInvestmentList();
+  });
+
   // Optional: calculate once on load so the page isn't empty
   runCalculation();
+  renderInvestmentList();
 });
