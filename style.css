@@ -1,41 +1,22 @@
-:root {
-  /* Base */
+:root{
   --bg: #f3f7fb;
+  --card: rgba(255,255,255,.78);
+  --border: rgba(15, 23, 42, .10);
   --text: #0f172a;
-  --heading: #0b1220;
   --muted: #475569;
 
-  /* Brand */
+  --background: rgba(37, 99, 235, .14);
   --accent: #2563eb;
 
-  /* Surfaces */
-  --card: rgba(255, 255, 255, 0.78);
-  --panel: rgba(255, 255, 255, 0.55);
-  --row-alt: rgba(255, 255, 255, 0.45);
-
-  /* Lines */
-  --border: rgba(15, 23, 42, 0.10);
-  --border-soft: rgba(15, 23, 42, 0.08);
-
-  /* Tints */
-  --accent-tint: rgba(37, 99, 235, 0.14);
-  --accent-tint-border: rgba(37, 99, 235, 0.18);
-  --accent-hover: rgba(37, 99, 235, 0.08);
-
-  /* Effects */
   --radius: 18px;
   --radius-sm: 12px;
-  --shadow-soft: 0 10px 22px rgba(2, 6, 23, 0.06);
-  --shadow-btn: 0 8px 16px rgba(37, 99, 235, 0.18);
-  --shadow-btn-hover: 0 10px 18px rgba(37, 99, 235, 0.22);
-  --shadow-reset: 0 8px 16px rgba(2, 6, 23, 0.06);
+  --shadow: 0 12px 26px rgba(2, 6, 23, .08);
+  --shadow-soft: 0 10px 22px rgba(2, 6, 23, .06);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-body {
+body{
   margin: 0;
   padding: 0;
   background: var(--bg);
@@ -43,43 +24,80 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
 }
 
-.container {
+.container{
   max-width: 980px;
   margin: 0 auto;
   padding: 22px;
 }
 
-/* =========================
-   HEADER
-   ========================= */
+/* ===== HEADER ===== */
+header{
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 
-header {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+
   padding: 24px 0 12px;
   margin-bottom: 18px;
   text-align: center;
 }
 
-header h1 {
+header h1{
   margin: 0 0 6px;
   font-size: clamp(1.9rem, 3vw, 2.5rem);
-  letter-spacing: 0.2px;
-  color: var(--heading);
+  letter-spacing: .2px;
 }
 
-header .subtext {
+header .subtext{
   margin: 0;
-  font-size: 1rem;
-  color: var(--muted);
+  color: rgba(226, 232, 240, .92);
+  font-size: 1.02rem;
 }
 
-/* =========================
-   CARDS + SECTION HEADERS
-   ========================= */
+/* ===== AUTH STRIP ===== */
+.authStrip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 
-.card {
+  margin: 6px 0 18px;
+}
+
+.authStrip input {
+  width: 180px;
+  padding: 9px 12px;
+  font-size: 0.9rem;
+}
+
+.authStrip button {
+  padding: 9px 14px;
+  font-size: 0.9rem;
+}
+
+/* ===== AUTH STATUS ===== */
+.authStatus{
+  margin-top: 10px;
+  min-height: 1.2em;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* status variants */
+.authStatus.statusError{ color: #b00020; }
+
+
+/* ===== CARDS ===== */
+.card{
   background: var(--card);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px;
@@ -87,24 +105,27 @@ header .subtext {
   box-shadow: var(--shadow-soft);
 }
 
-/* Default card header bar (used by all other cards) */
-.card h2 {
+/* Default section headers */
+.card h2{
   margin: -18px -18px 16px;
   padding: 12px 18px;
-  background: var(--accent-tint);
-  border-bottom: 1px solid var(--accent-tint-border);
+
+  background: rgba(37, 99, 235, .14);
+  border-bottom: 1px solid rgba(37, 99, 235, .18);
   border-radius: var(--radius) var(--radius) 0 0;
+
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--heading);
+  color: #0b1220;
 }
 
-/* Data Input header row (title left, reset right) */
-.cardHeader {
+/* ===== Data Input header row (title + reset) ===== */
+.cardHeader{
   margin: -18px -18px 16px;
   padding: 12px 18px;
-  background: var(--accent-tint);
-  border-bottom: 1px solid var(--accent-tint-border);
+
+  background: rgba(37, 99, 235, .14);
+  border-bottom: 1px solid rgba(37, 99, 235, .18);
   border-radius: var(--radius) var(--radius) 0 0;
 
   display: flex;
@@ -113,104 +134,97 @@ header .subtext {
   gap: 12px;
 }
 
-/* Override the default .card h2 bar styling inside cardHeader */
-.cardHeader h2 {
+/* Override default .card h2 inside cardHeader */
+.cardHeader h2{
   margin: 0;
   padding: 0;
   background: transparent;
   border-bottom: none;
   border-radius: 0;
+
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--heading);
+  color: #0b1220;
 }
 
-/* =========================
-   FORM
-   ========================= */
+/* Slightly smaller reset button in header */
+.cardHeader #resetBtn{
+  padding: 8px 14px;
+}
 
-.grid {
+/* ===== FORM ===== */
+.grid{
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  background: var(--panel);
-  border: 1px solid var(--border-soft);
+
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(15, 23, 42, .08);
   padding: 16px;
   border-radius: var(--radius-sm);
 }
 
-label {
+label{
   display: grid;
   gap: 7px;
   font-weight: 600;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: .92rem;
 }
 
-input {
+input{
   padding: 11px 12px;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(15, 23, 42, .14);
   border-radius: 12px;
   font-size: 0.98rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255,255,255,.9);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-input:focus {
-  border-color: rgba(37, 99, 235, 0.55);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+input:focus{
+  border-color: rgba(37, 99, 235, .55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .16);
 }
 
-/* =========================
-   BUTTONS
-   ========================= */
-
-.actions {
+/* ===== BUTTONS ===== */
+.actions{
   display: flex;
   gap: 12px;
   margin-top: 16px;
   flex-wrap: wrap;
 }
 
-button {
+button{
   padding: 10px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(37, 99, 235, 0.45);
+  border: 1px solid rgba(37, 99, 235, .45);
   background: var(--accent);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: var(--shadow-btn);
-  transition: transform 0.06s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: transform .06s ease, box-shadow .15s ease, opacity .15s ease;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, .18);
 }
 
-button:hover {
-  opacity: 0.96;
-  box-shadow: var(--shadow-btn-hover);
+button:hover{
+  opacity: .96;
+  box-shadow: 0 10px 18px rgba(37, 99, 235, .22);
 }
 
-button:active {
+button:active{
   transform: translateY(1px);
 }
 
-button#resetBtn {
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--text);
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  box-shadow: var(--shadow-reset);
+button#resetBtn{
+  background: rgba(255,255,255,.85);
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, .14);
+  box-shadow: 0 8px 16px rgba(2, 6, 23, .06);
 }
 
-/* Slightly smaller reset button in the header */
-.cardHeader #resetBtn {
-  padding: 8px 14px;
-}
-
-/* =========================
-   TABLES
-   ========================= */
-
-table {
+/* ===== TABLES ===== */
+table{
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -218,45 +232,41 @@ table {
   border-radius: 14px;
 }
 
-th,
-td {
+th, td{
   padding: 12px 14px;
   text-align: left;
-  font-size: 0.98rem;
+  font-size: .98rem;
 }
 
-thead th {
-  background: rgba(15, 23, 42, 0.06);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
+thead th{
+  background: rgba(15, 23, 42, .06);
+  border-bottom: 1px solid rgba(15, 23, 42, .10);
   font-weight: 800;
-  color: var(--heading);
+  color: #0b1220;
 }
 
-tbody td {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+tbody td{
+  border-bottom: 1px solid rgba(15, 23, 42, .06);
 }
 
-tbody tr:nth-child(even) {
-  background: var(--row-alt);
+tbody tr:nth-child(even){
+  background: rgba(255,255,255,.45);
 }
 
-tbody tr:hover {
-  background: var(--accent-hover);
+tbody tr:hover{
+  background: rgba(37, 99, 235, .08);
 }
 
-/* =========================
-   ERROR + FOOTER
-   ========================= */
-
-.error {
+/* ===== ERROR & FOOTER ===== */
+.error{
   color: #b00020;
   margin-top: 10px;
   min-height: 1.2em;
   font-weight: 600;
 }
 
-.footer {
-  color: rgba(71, 85, 105, 0.95);
-  font-size: 0.92rem;
+.footer{
+  color: rgba(71, 85, 105, .95);
+  font-size: .92rem;
   margin-top: 18px;
 }
