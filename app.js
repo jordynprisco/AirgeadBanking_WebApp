@@ -8,7 +8,21 @@
   Month counting starts at 1 for readability (Month 1 = first month)
 */
 
-// ---------- Core calculation  ----------
+// ---------- Supabase setup ----------
+const SUPABASE_URL = "https://gcafqjwdhtlyddcpgbdh.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2vDfA-Uf72fClGntr45FLw_dha0XZCK";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ---------- Local storage key ----------
+const LOCAL_KEY = "airgead_scenarios_local_v1";
+
+// ---------- DSA enhancement: in-memory collection of saved scenarios ----------
+let investments = [];
+let nextId = 1;
+
+// Track whether if using DB saves/loads
+let usingDatabase = false;
+
 /**
  * @typedef {Object} YearSummary
  * @property {number} year
@@ -26,10 +40,9 @@
  * @returns {YearSummary[]}
  */
 
-// DSA enhancement: in-memory collection of saved scenarios
-let investments = [];
-let nextId = 1;
-
+// =======================
+// CORE CALCULATION
+// =======================
 function calculateSchedule(initialInvestment, monthlyDeposit, annualInterestRate, years, withDeposit) {
   const results = [];
 
@@ -68,6 +81,7 @@ function calculateSchedule(initialInvestment, monthlyDeposit, annualInterestRate
   return results;
 }
 
+// ---------- Inputs ----------
 function getParsedInputs() {
   const initial = Number(document.getElementById("initial").value);
   const monthly = Number(document.getElementById("monthly").value);
@@ -85,15 +99,80 @@ function isValidInputs(inputs) {
   return true;
 }
 
-function saveInvestment(inputs) {
+// ---------- Local persistence helpers ----------
+function loadLocalInvestments() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalInvestments(list) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(list));
+}
+
+function syncNextIdFromInvestments() {
+  // Keep IDs increasing even after reload
+  const maxId = investments.reduce((m, x) => Math.max(m, Number(x.id) || 0), 0);
+  nextId = maxId + 1;
+}
+
+// ---------- Database helpers ----------
+async function loadInvestmentsFromDb() {
+  const { data, error } = await supabaseClient
+    .from("investments")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  // Map DB rows into existing in-memory shape
+  return (data || []).map(r => ({
+    id: r.id, // DB primary key; fine to keep internal
+    initial: r.initial_investment,
+    monthly: r.monthly_deposit,
+    rate: r.annual_interest_rate,
+    years: r.years,
+    // Keep a hidden timestamp for sorting
+    createdAt: r.created_at
+  }));
+}
+
+async function saveInvestmentToDb(inputs) {
+  const { error } = await supabaseClient.from("investments").insert([{
+    initial_investment: inputs.initial,
+    monthly_deposit: inputs.monthly,
+    annual_interest_rate: inputs.rate,
+    years: inputs.years
+  }]);
+
+  if (error) throw error;
+}
+
+// ---------- Save scenario (DB if logged in, otherwise local) ----------
+async function saveInvestment(inputs) {
+  if (usingDatabase) {
+    await saveInvestmentToDb(inputs);
+    // reload after save so list reflects DB order
+    investments = await loadInvestmentsFromDb();
+    return;
+  }
+
+  // Local save (persist + keep hidden timestamp for sorting)
   investments.push({
     id: nextId++,
     initial: inputs.initial,
     monthly: inputs.monthly,
     rate: inputs.rate,
     years: inputs.years,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString() // hidden in UI but used for sorting
   });
+
+  saveLocalInvestments(investments);
 }
 
 function sortByDateDesc() {
@@ -119,10 +198,12 @@ function renderInvestmentList() {
 
   investments.forEach(inv => {
     const li = document.createElement("li");
-    const date = new Date(inv.createdAt).toLocaleString();
+
+    // NOTE: timestamp stays internal only (not displayed)
+    // NOTE: id stays internal only (not displayed)
 
     li.textContent =
-      `Initial: $${inv.initial} | Monthly: $${inv.monthly} | Rate: ${inv.rate}% | Years: ${inv.years} | Saved: ${date} | ID number: ${inv.id}`;
+      `Initial: $${inv.initial} | Monthly: $${inv.monthly} | Rate: ${inv.rate}% | Years: ${inv.years}`;
 
     list.appendChild(li);
   });
@@ -192,13 +273,64 @@ function setError(msg) {
   document.getElementById("error").textContent = msg || "";
 }
 
+// ---------- Auth UI helpers ----------
+function setAuthStatus(msg) {
+  const el = document.getElementById("authStatus");
+  if (el) el.textContent = msg || "";
+}
+
+function setAuthUi(isLoggedIn) {
+  const email = document.getElementById("authEmail");
+  const pass = document.getElementById("authPassword");
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (!email || !pass || !loginBtn || !registerBtn || !logoutBtn) return;
+
+  email.disabled = isLoggedIn;
+  pass.disabled = isLoggedIn;
+
+  loginBtn.style.display = isLoggedIn ? "none" : "";
+  registerBtn.style.display = isLoggedIn ? "none" : "";
+  logoutBtn.style.display = isLoggedIn ? "" : "none";
+
+  if (isLoggedIn) pass.value = "";
+}
+
 // ---------- Wire up UI ----------
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const form = document.getElementById("calcForm");
   const resetBtn = document.getElementById("resetBtn");
 
   const noDepBody = document.getElementById("noDepBody");
   const depBody = document.getElementById("depBody");
+
+  // --- Determine auth state on load ---
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    if (data?.session) {
+      usingDatabase = true;
+      setAuthUi(true);
+      setAuthStatus("Logged in. Saving to database.");
+
+      investments = await loadInvestmentsFromDb();
+    } else {
+      usingDatabase = false;
+      setAuthUi(false);
+      setAuthStatus("Not logged in. Saving locally.");
+
+      investments = loadLocalInvestments();
+      syncNextIdFromInvestments();
+    }
+  } catch {
+    usingDatabase = false;
+    setAuthUi(false);
+    setAuthStatus("Auth unavailable. Saving locally.");
+
+    investments = loadLocalInvestments();
+    syncNextIdFromInvestments();
+  }
 
   function runCalculation() {
     setError("");
@@ -244,7 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clearTableBody(depBody);
   });
 
-  document.getElementById("saveScenarioBtn")?.addEventListener("click", () => {
+  document.getElementById("saveScenarioBtn")?.addEventListener("click", async () => {
     const parsed = getParsedInputs();
 
     if (!isValidInputs(parsed)) {
@@ -252,9 +384,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    saveInvestment(parsed);
-    sortByDateDesc(); // newest first by default
-    renderInvestmentList();
+    try {
+      await saveInvestment(parsed);
+
+      // newest first by default 
+      sortByDateDesc();
+      renderInvestmentList();
+    } catch (e) {
+      alert(e?.message || "Save failed.");
+    }
   });
 
   document.getElementById("sortDateBtn")?.addEventListener("click", () => {
@@ -267,7 +405,61 @@ document.addEventListener("DOMContentLoaded", () => {
     renderInvestmentList();
   });
 
+  // --- Auth buttons ---
+  document.getElementById("registerBtn")?.addEventListener("click", async () => {
+    const email = document.getElementById("authEmail")?.value?.trim();
+    const password = document.getElementById("authPassword")?.value;
+
+    if (!email || !password) {
+      setAuthStatus("Enter email and password.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signUp({ email, password });
+    setAuthStatus(error ? error.message : "Registered. (Check email if confirmation is enabled.)");
+  });
+
+  document.getElementById("loginBtn")?.addEventListener("click", async () => {
+    const email = document.getElementById("authEmail")?.value?.trim();
+    const password = document.getElementById("authPassword")?.value;
+
+    if (!email || !password) {
+      setAuthStatus("Enter email and password.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      setAuthStatus(error.message);
+      return;
+    }
+
+    // Switch to DB mode and load
+    usingDatabase = true;
+    setAuthUi(true);
+    setAuthStatus("Logged in. Saving to database.");
+
+    investments = await loadInvestmentsFromDb();
+    sortByDateDesc();
+    renderInvestmentList();
+  });
+
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+
+    // Switch to local mode and load
+    usingDatabase = false;
+    setAuthUi(false);
+    setAuthStatus("Not logged in. Saving locally.");
+
+    investments = loadLocalInvestments();
+    syncNextIdFromInvestments();
+    sortByDateDesc();
+    renderInvestmentList();
+  });
+
   // Optional: calculate once on load so the page isn't empty
   runCalculation();
+  sortByDateDesc();
   renderInvestmentList();
 });
